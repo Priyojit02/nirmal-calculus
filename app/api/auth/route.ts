@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/models/User';
 import { COOKIE_NAME, getUser, signToken } from '@/lib/auth';
+import { ensureSuperAdmin, getSuperAdminEmail } from '@/lib/superAdmin';
 
 function badRequest(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
+    await ensureSuperAdmin();
 
     const email = String(body.email ?? '').toLowerCase().trim();
     const password = String(body.password ?? '');
@@ -49,27 +51,40 @@ export async function POST(req: NextRequest) {
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
+      const isSuperAdmin = email === getSuperAdminEmail();
       user = await User.create({
         name: name.slice(0, 60),
         email,
         passwordHash,
+        role: isSuperAdmin ? 'super_admin' : 'user',
+        provider: 'credentials',
       });
     } else {
-      if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-        return badRequest('Invalid email or password.', 401);
+      if (
+        !user ||
+        !user.passwordHash ||
+        !(await bcrypt.compare(password, user.passwordHash))
+      ) {
+        return badRequest(
+          'Invalid email or password (if you signed up via SSO, use Google/GitHub login).',
+          401
+        );
       }
     }
 
-    const token = await signToken({
+    const authPayload = {
       id: user._id.toString(),
       name: user.name,
       email: user.email,
-    });
+      role: user.role,
+    };
+
+    const token = await signToken(authPayload);
 
     const res = NextResponse.json({
       ok: true,
       token,
-      user: { id: user._id.toString(), name: user.name, email: user.email },
+      user: authPayload,
     });
 
     res.cookies.set(COOKIE_NAME, token, {

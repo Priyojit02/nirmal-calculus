@@ -10,6 +10,10 @@ export type DifficultyLevel = 'Foundation' | 'JEE Advanced' | 'MIT / Putnam';
 
 export type QuestionType = 'mcq' | 'numerical';
 
+export type UserRole = 'user' | 'super_admin';
+
+export type AuthProvider = 'credentials' | 'google' | 'github';
+
 export interface ProblemDTO {
   id: string;
   slug: string;
@@ -76,4 +80,5 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
 }

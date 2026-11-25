@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import type { AuthUser } from '@/types';
+import type { AuthUser, UserRole } from '@/types';
 
 export const COOKIE_NAME = 'nirmal_session';
 export const JWT_ISSUER = 'nirmal-calculus';
@@ -22,6 +22,7 @@ export async function signToken(user: AuthUser): Promise<string> {
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role,
   })
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(user.id)
@@ -40,6 +41,8 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
       audience: JWT_AUDIENCE,
     });
     const id = typeof payload.sub === 'string' ? payload.sub : payload.id;
+    const role: UserRole =
+      payload.role === 'super_admin' ? 'super_admin' : 'user';
     if (
       typeof id === 'string' &&
       typeof payload.name === 'string' &&
@@ -49,6 +52,7 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
         id,
         name: payload.name,
         email: payload.email,
+        role,
       };
     }
     return null;
@@ -58,7 +62,6 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
 }
 
 export async function getUser(req?: Request): Promise<AuthUser | null> {
-  // 1. Check Authorization: Bearer <token> header if Request is provided
   if (req) {
     const authHeader = req.headers.get('authorization');
     if (authHeader?.startsWith('Bearer ')) {
@@ -69,7 +72,6 @@ export async function getUser(req?: Request): Promise<AuthUser | null> {
     }
   }
 
-  // 2. Fallback to HTTP-only session cookie
   const cookieStore = cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;

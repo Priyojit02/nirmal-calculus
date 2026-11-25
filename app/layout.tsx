@@ -29,6 +29,11 @@ export default async function RootLayout({
             <Link href="/problems">Problem Bank</Link>
             <Link href="/tests">Timed Mocks</Link>
             <Link href="/dashboard">Dashboard</Link>
+            {user?.role === 'super_admin' && (
+              <Link href="/admin" className="tag purple">
+                Admin
+              </Link>
+            )}
             {user ? (
               <>
                 <span className="mu">Hi, {user.name}</span>
