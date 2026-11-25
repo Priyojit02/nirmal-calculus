@@ -96,7 +96,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
               : 'Generate Fresh Practice Problems into MongoDB'}
           </h3>
           <p className="mu" style={{ margin: 0 }}>
-            Powered by Google Gemini (`gemini-4-hydrogen`) — set topic,
+            Powered by Google Gemini (<code>gemini-3.1-flash-lite</code>) — set topic,
             standard, question count{mode === 'test' ? ', and time limit' : ''}.
           </p>
         </div>

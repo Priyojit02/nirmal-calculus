@@ -49,7 +49,7 @@ function getAIConfig(modelOverride?: string) {
   const model =
     modelOverride?.trim() ||
     process.env.AI_MODEL ||
-    'gemini-4-hydrogen';
+    'gemini-3.1-flash-lite';
   const apiKey = geminiKey || process.env.AI_API_KEY || '';
   return { baseUrl, model, apiKey };
 }
@@ -210,27 +210,58 @@ Ensure all LaTeX backslashes are properly escaped in JSON strings (e.g. \\\\frac
 ${formatInstruction}
 For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g. King's property, Feynman differentiation under the integral sign, Taylor cancellation, Bernoulli ODEs, Jacobians, Stokes/Green's theorem, or telescoping series).`;
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
-  });
+  const candidates = [model];
+  if (baseUrl.includes('generativelanguage.googleapis.com')) {
+    for (const fb of [
+      'gemini-3.8-flash',
+      'gemini-3.5-flash',
+      'gemini-3.1-flash-lite',
+      'gemini-4-hydrogen',
+      'gemini-flash-latest',
+    ]) {
+      if (!candidates.includes(fb)) candidates.push(fb);
+    }
+  }
 
-  if (!response.ok) {
-    const errText = await response.text().catch(() => '');
+  let response: Response | null = null;
+  let usedModel = model;
+  let lastErr = '';
+
+  for (const candidateModel of candidates) {
+    usedModel = candidateModel;
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: candidateModel,
+        temperature: 0.4,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    });
+
+    if (res.ok) {
+      response = res;
+      break;
+    }
+
+    lastErr = await res.text().catch(() => '');
+    if (res.status !== 503 && res.status !== 429 && res.status !== 404) {
+      throw new Error(
+        `AI endpoint (${baseUrl}, model: ${candidateModel}) returned ${res.status}: ${lastErr.slice(0, 240)}`
+      );
+    }
+  }
+
+  if (!response) {
     throw new Error(
-      `AI endpoint (${baseUrl}, model: ${model}) returned ${response.status}: ${errText.slice(0, 240)}`
+      `All AI models (${candidates.join(', ')}) are temporarily busy: ${lastErr.slice(0, 200)}`
     );
   }
 
@@ -254,7 +285,7 @@ For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g
       : [];
 
   const validated = rawList
-    .map((item) => validateProblem(item, params.topic, params.difficulty, model))
+    .map((item) => validateProblem(item, params.topic, params.difficulty, usedModel))
     .filter((p): p is GeneratedProblemInput => p !== null);
 
   if (validated.length === 0) {
