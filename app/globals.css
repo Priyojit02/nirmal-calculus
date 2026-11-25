@@ -444,8 +444,20 @@ label {
 }
 
 .math-display {
-  margin: 10px 0;
+  margin: 12px 0;
+  padding: 8px 12px;
+  background: var(--cd);
+  border-radius: 8px;
+  border: 1px solid var(--ln);
   overflow-x: auto;
+}
+
+.math-prose {
+  line-height: 1.75;
+}
+
+.math-step-gap {
+  height: 8px;
 }
 
 .options-list {

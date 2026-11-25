@@ -13,6 +13,14 @@ type Segment =
   | { type: 'inline'; content: string }
   | { type: 'text'; content: string };
 
+function normalizeStepFormatting(input: string): string {
+  // Ensure **Step N:** or "Step N:" starts on a new line if embedded in prose
+  return input
+    .replace(/\s*(\*\*Step\s+\d+[:.]\*\*)/gi, '\n$1')
+    .replace(/\s*(\*\*Final Answer[:.]\*\*)/gi, '\n$1')
+    .replace(/^\n+/, '');
+}
+
 function tokenizeMath(input: string): Segment[] {
   const segments: Segment[] = [];
   const regex = /(\$\$[\s\S]+?\$\$|\$[^$\n]+?\$)/g;
@@ -39,7 +47,7 @@ function tokenizeMath(input: string): Segment[] {
   return segments;
 }
 
-function renderBoldAndBreaks(text: string, keyPrefix: string): React.ReactNode[] {
+function renderInlineText(text: string, keyPrefix: string): React.ReactNode[] {
   const lines = text.split('\n');
   const nodes: React.ReactNode[] = [];
 
@@ -61,7 +69,7 @@ function renderBoldAndBreaks(text: string, keyPrefix: string): React.ReactNode[]
       }
     });
     if (lineIdx < lines.length - 1) {
-      nodes.push(<br key={`${keyPrefix}-br-${lineIdx}`} />);
+      nodes.push(<div key={`${keyPrefix}-sp-${lineIdx}`} className="math-step-gap" />);
     }
   });
 
@@ -70,7 +78,8 @@ function renderBoldAndBreaks(text: string, keyPrefix: string): React.ReactNode[]
 
 export default function MathTex({ text, className }: MathTexProps) {
   const rendered = useMemo(() => {
-    const segments = tokenizeMath(text);
+    const normalized = normalizeStepFormatting(text);
+    const segments = tokenizeMath(normalized);
     return segments.map((seg, idx) => {
       if (seg.type === 'display') {
         const html = katex.renderToString(seg.content, {
@@ -100,11 +109,11 @@ export default function MathTex({ text, className }: MathTexProps) {
       }
       return (
         <React.Fragment key={idx}>
-          {renderBoldAndBreaks(seg.content, String(idx))}
+          {renderInlineText(seg.content, String(idx))}
         </React.Fragment>
       );
     });
   }, [text]);
 
-  return <div className={className}>{rendered}</div>;
+  return <div className={`math-prose ${className || ''}`}>{rendered}</div>;
 }

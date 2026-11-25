@@ -202,7 +202,7 @@ Respond ONLY with valid JSON matching this exact schema:
       "correctValue": <exact numeric answer matching the solution if numerical, omit if mcq>,
       "tolerance": 0.01,
       "hint": "Concise LaTeX hint",
-      "solution": "Clean, final step-by-step LaTeX derivation with NO scratchpad thoughts",
+      "solution": "Structured step-by-step derivation:\\n**Step 1:** ...\\n$$...$$\\n**Step 2:** ...\\n$$...$$\\n**Final Answer:** ...",
       "tags": ["Tag1", "Tag2"]
     }
   ]
@@ -210,8 +210,9 @@ Respond ONLY with valid JSON matching this exact schema:
 CRITICAL RULES:
 1. Solve and verify the math completely in your internal reasoning BEFORE writing JSON.
 2. NEVER write scratchpad phrases like "Wait", "Actually", or "Let's adjust the problem" inside "solution" or "statement".
-3. "correctValue" (for numerical) or "options[correctOption]" (for mcq) MUST strictly match the final line of "solution" and the exact numbers in "statement".
-4. Properly escape all LaTeX backslashes in JSON strings (e.g. \\\\frac, \\\\int, \\\\lim).`;
+3. Format "solution" cleanly line-by-line using "**Step 1:** ...", "**Step 2:** ...", separated by \\n newlines, and put every major equation on its own $$...$$ display math line.
+4. "correctValue" (for numerical) or "options[correctOption]" (for mcq) MUST strictly match the final line of "solution" and the exact numbers in "statement".
+5. Properly escape all LaTeX backslashes in JSON strings (e.g. \\\\frac, \\\\int, \\\\lim).`;
 
   const userPrompt = `Generate ${count} original, non-trivial calculus problem(s) in "${params.topic}" at "${params.difficulty}" difficulty.
 ${formatInstruction}
