@@ -71,7 +71,7 @@ export default async function ProblemsPage({
       <section className="hero" style={{ paddingBottom: 10 }}>
         <h1>Calculus Problem Bank</h1>
         <p className="mu">
-          {problems.length} problem(s) in MongoDB matching your filters.
+          {problems.length} problem(s) matching your filters.
         </p>
 
         <AIProblemGenerator mode="problems" />

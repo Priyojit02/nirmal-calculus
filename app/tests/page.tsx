@@ -14,8 +14,8 @@ export default async function TestsPage() {
       <section className="hero" style={{ paddingBottom: 10 }}>
         <h1>Timed Mock Exams</h1>
         <p className="mu">
-          Generate custom JEE Advanced &amp; MIT-level mock exams using
-          open-source AI, saved directly in MongoDB.
+          Generate custom JEE Advanced &amp; MIT-level mock exams with your own
+          question count and time limit.
         </p>
       </section>
 

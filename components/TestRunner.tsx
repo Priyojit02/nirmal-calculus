@@ -149,7 +149,7 @@ export default function TestRunner({ test, questions }: TestRunnerProps) {
   if (phase === 'busy') {
     return (
       <div className="card narrow">
-        <p className="mu">Grading solutions and saving attempt to MongoDB…</p>
+        <p className="mu">Grading solutions and saving your attempt…</p>
       </div>
     );
   }

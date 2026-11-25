@@ -69,13 +69,11 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
       }
 
       if (mode === 'test' && data.slug) {
-        setStatus(`Created "${data.title}" in MongoDB. Launching exam…`);
+        setStatus(`Created "${data.title}". Launching exam…`);
         router.push(`/tests/${data.slug}`);
         router.refresh();
       } else {
-        setStatus(
-          `Generated ${data.count ?? count} new problem(s) and saved to MongoDB.`
-        );
+        setStatus(`Generated ${data.count ?? count} new problem(s).`);
         router.refresh();
       }
     } catch {
@@ -93,7 +91,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
           <h3 style={{ margin: '8px 0 4px' }}>
             {mode === 'test'
               ? 'Generate Custom Timed Mock Exam'
-              : 'Generate Fresh Practice Problems into MongoDB'}
+              : 'Generate Fresh Practice Problems'}
           </h3>
           <p className="mu" style={{ margin: 0 }}>
             Set topic, standard, question count
@@ -195,7 +193,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
           ? 'Crafting rigorous calculus problems…'
           : mode === 'test'
             ? 'Generate & Launch Timed Mock →'
-            : 'Generate & Save to MongoDB'}
+            : 'Generate Problems'}
       </button>
     </form>
   );

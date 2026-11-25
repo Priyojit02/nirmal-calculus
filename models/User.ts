@@ -14,6 +14,8 @@ export interface IUser extends Document {
   role: UserRole;
   provider: AuthProvider;
   activeSessions: IActiveSession[];
+  resetCodeHash?: string;
+  resetCodeExpiresAt?: Date;
   solvedSlugs: string[];
   bookmarkedSlugs: string[];
   createdAt: Date;
@@ -46,6 +48,8 @@ const UserSchema = new Schema<IUser>(
       default: 'credentials',
     },
     activeSessions: { type: [ActiveSessionSchema], default: [] },
+    resetCodeHash: { type: String },
+    resetCodeExpiresAt: { type: Date },
     solvedSlugs: { type: [String], default: [] },
     bookmarkedSlugs: { type: [String], default: [] },
   },

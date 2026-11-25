@@ -81,9 +81,9 @@ export default async function HomePage() {
 
       <div className="stats-grid">
         <div className="card">
-          <div className="mu">Problems in MongoDB</div>
+          <div className="mu">Practice Problems</div>
           <div className="big">{problemCount}</div>
-          <div className="mu">100% AI-generated &amp; persisted</div>
+          <div className="mu">JEE Advanced &amp; MIT Standard</div>
         </div>
         <div className="card">
           <div className="mu">Timed Mock Papers</div>
@@ -101,7 +101,7 @@ export default async function HomePage() {
         <div className="card">
           <div className="bar wrap">
             <div className="tag-row">
-              <span className="tag">Latest in MongoDB</span>
+              <span className="tag">Latest Challenge</span>
               <span className="tag purple">{featured.difficulty}</span>
               <span className="tag subtle">{featured.source}</span>
             </div>
