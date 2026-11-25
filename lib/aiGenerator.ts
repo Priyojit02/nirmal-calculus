@@ -216,6 +216,8 @@ For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g
     for (const fb of [
       'gemini-3.1-flash-lite',
       'gemini-3.8-flash',
+      'gemma-4-31b-it',
+      'gemma-4-26b-a4b-it',
       'gemini-3.5-flash',
       'gemini-flash-latest',
     ]) {
@@ -229,18 +231,21 @@ For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g
 
   for (const candidateModel of candidates) {
     usedModel = candidateModel;
+    const isGemma = candidateModel.startsWith('gemma');
     try {
       const payload: Record<string, unknown> = {
         model: candidateModel,
         temperature: 0.4,
-        response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
       };
-      if (isGemini) {
-        payload.reasoning_effort = 'low';
+      if (!isGemma) {
+        payload.response_format = { type: 'json_object' };
+        if (isGemini) {
+          payload.reasoning_effort = 'low';
+        }
       }
 
       const res = await fetch(`${baseUrl}/chat/completions`, {
