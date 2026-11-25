@@ -10,7 +10,7 @@ export const maxDuration = 60;
 export async function POST(req: NextRequest) {
   const limited = await checkRateLimit(req, {
     bucket: 'ai-generate',
-    limit: 8,
+    limit: 25,
     windowSeconds: 300,
   });
   if (limited) return limited;
