@@ -14,11 +14,22 @@ export default function LoginPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'register' || tab === 'signup') {
+      setMode('register');
+    } else if (tab === 'login') {
+      setMode('login');
+    }
     const errParam = params.get('error');
     if (errParam) {
       setError(errParam);
     }
   }, []);
+
+  const switchTab = (nextMode: 'login' | 'register') => {
+    setMode(nextMode);
+    setError('');
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,14 +64,40 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="card narrow">
+    <div className="card narrow auth-card">
+      <div className="tag-row" style={{ justifyContent: 'center' }}>
+        <span className="tag purple">∫ Nirmal Calculus Studio</span>
+      </div>
+
+      <div className="tabs" role="tablist" aria-label="Authentication mode">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'login'}
+          className={`tab-btn ${mode === 'login' ? 'active' : ''}`}
+          onClick={() => switchTab('login')}
+        >
+          Login
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'register'}
+          className={`tab-btn ${mode === 'register' ? 'active' : ''}`}
+          onClick={() => switchTab('register')}
+        >
+          Sign Up
+        </button>
+      </div>
+
       <form
         onSubmit={handleSubmit}
         style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
       >
-        <h2>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
-        <p className="mu" style={{ margin: 0 }}>
-          Sign in with JWT credentials or Single Sign-On (SSO).
+        <p className="mu" style={{ margin: 0, textAlign: 'center' }}>
+          {mode === 'login'
+            ? 'Sign in to access your mastery dashboard, mocks, and saved proofs.'
+            : 'Create a free scholar account to track calculus mastery and compete.'}
         </p>
 
         {mode === 'register' && (
@@ -71,12 +108,13 @@ export default function LoginPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              minLength={2}
             />
           </label>
         )}
 
         <label>
-          Email
+          Email Address
           <input
             type="email"
             placeholder="you@example.com"
@@ -102,25 +140,18 @@ export default function LoginPage() {
 
         <button type="submit" className="btn p" disabled={loading}>
           {loading
-            ? 'Please wait…'
+            ? 'Authenticating…'
             : mode === 'login'
-              ? 'Login'
-              : 'Create Account'}
+              ? 'Login with Email'
+              : 'Create Scholar Account'}
         </button>
       </form>
 
-      <div
-        style={{
-          borderTop: '1px solid var(--ln)',
-          paddingTop: 12,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-        }}
-      >
-        <div className="mu" style={{ textAlign: 'center' }}>
-          Or continue with SSO
-        </div>
+      <div className="divider">
+        <span>or continue with SSO</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <a href="/api/auth/sso/google" className="btn">
           Continue with Google (SSO)
         </a>
@@ -128,20 +159,6 @@ export default function LoginPage() {
           Continue with GitHub (SSO)
         </a>
       </div>
-
-      <p className="mu" style={{ margin: 0 }}>
-        {mode === 'login' ? 'New here? ' : 'Already have an account? '}
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setError('');
-            setMode(mode === 'login' ? 'register' : 'login');
-          }}
-        >
-          {mode === 'login' ? 'Register' : 'Login'}
-        </a>
-      </p>
     </div>
   );
 }

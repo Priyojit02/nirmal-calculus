@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const topic: CalculusTopic = body.topic || 'Integral Calculus';
     const difficulty: DifficultyLevel = body.difficulty || 'JEE Advanced';
     const type: QuestionType | 'mixed' = body.type || 'mixed';
-    const count = Math.max(1, Math.min(5, Number(body.count) || 2));
+    const count = Math.max(1, Math.min(10, Number(body.count) || 2));
 
     await connectDB();
 

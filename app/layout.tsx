@@ -4,11 +4,12 @@ import 'katex/dist/katex.min.css';
 import './globals.css';
 import { getUser } from '@/lib/auth';
 import LogoutButton from '@/components/LogoutButton';
+import NavLinks from '@/components/NavLinks';
 
 export const metadata: Metadata = {
-  title: 'Nirmal Calculus — JEE Advanced & MIT Math Practice Platform',
+  title: 'Nirmal∫ — JEE Advanced & MIT Calculus Studio',
   description:
-    'Master Limits, Differential & Integral Calculus, ODEs, Multivariable Calculus, and Infinite Series with JEE Advanced and MIT-standard problems.',
+    'Master Limits, Differential & Integral Calculus, ODEs, Multivariable Calculus, and Infinite Series with AI-generated JEE Advanced and MIT-standard problems.',
 };
 
 export default async function RootLayout({
@@ -22,27 +23,34 @@ export default async function RootLayout({
     <html lang="en">
       <body>
         <nav>
-          <Link href="/" className="logo">
-            Nirmal<span>∫</span>
-          </Link>
+          <div className="nav-left">
+            <Link href="/" className="logo">
+              Nirmal<span>∫</span>
+            </Link>
+            <NavLinks isSuperAdmin={user?.role === 'super_admin'} />
+          </div>
           <div className="links">
-            <Link href="/problems">Problem Bank</Link>
-            <Link href="/tests">Timed Mocks</Link>
-            <Link href="/dashboard">Dashboard</Link>
-            {user?.role === 'super_admin' && (
-              <Link href="/admin" className="tag purple">
-                Admin
-              </Link>
-            )}
             {user ? (
               <>
-                <span className="mu">Hi, {user.name}</span>
+                <span className="mu">
+                  {user.name}
+                  {user.role === 'super_admin' && (
+                    <span className="tag purple" style={{ marginLeft: 8 }}>
+                      Super Admin
+                    </span>
+                  )}
+                </span>
                 <LogoutButton />
               </>
             ) : (
-              <Link className="btn p sm" href="/login">
-                Login
-              </Link>
+              <>
+                <Link className="btn sm" href="/login?tab=login">
+                  Login
+                </Link>
+                <Link className="btn p sm" href="/login?tab=register">
+                  Sign Up
+                </Link>
+              </>
             )}
           </div>
         </nav>

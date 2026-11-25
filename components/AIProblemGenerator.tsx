@@ -28,7 +28,8 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
   const [topic, setTopic] = useState<CalculusTopic>('Integral Calculus');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('JEE Advanced');
   const [type, setType] = useState<QuestionType | 'mixed'>('mixed');
-  const [count, setCount] = useState<number>(mode === 'test' ? 3 : 2);
+  const [count, setCount] = useState<number>(mode === 'test' ? 4 : 2);
+  const [duration, setDuration] = useState<number>(20);
   const [customTitle, setCustomTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +47,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
 
       const payload =
         mode === 'test'
-          ? { title: customTitle, topic, difficulty, count }
+          ? { title: customTitle, topic, difficulty, count, duration }
           : { topic, difficulty, type, count };
 
       const res = await fetch(endpoint, {
@@ -68,7 +69,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
       }
 
       if (mode === 'test' && data.slug) {
-        setStatus(`Created "${data.title}" in MongoDB. Redirecting…`);
+        setStatus(`Created "${data.title}" in MongoDB. Launching exam…`);
         router.push(`/tests/${data.slug}`);
         router.refresh();
       } else {
@@ -91,12 +92,12 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
           <span className="tag purple">AI Calculus Engine</span>
           <h3 style={{ margin: '8px 0 4px' }}>
             {mode === 'test'
-              ? 'Generate Custom AI Timed Mock Exam'
-              : 'Generate Fresh Calculus Problems into MongoDB'}
+              ? 'Generate Custom Timed Mock Exam'
+              : 'Generate Fresh Practice Problems into MongoDB'}
           </h3>
           <p className="mu" style={{ margin: 0 }}>
-            Powered by Google Gemini (or any OpenAI-compatible open-source LLM)
-            — zero hardcoded questions.
+            Powered by Google Gemini (`gemini-4-hydrogen`) — set topic,
+            standard, question count{mode === 'test' ? ', and time limit' : ''}.
           </p>
         </div>
       </div>
@@ -104,7 +105,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
       <div
         className="grid"
         style={{
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))',
           marginTop: 14,
           marginBottom: 10,
         }}
@@ -161,15 +162,28 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
         )}
 
         <label>
-          Number of Questions (1–5)
+          Number of Questions ({mode === 'test' ? '2–10' : '1–10'})
           <input
             type="number"
             min={mode === 'test' ? 2 : 1}
-            max={5}
+            max={10}
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
           />
         </label>
+
+        {mode === 'test' && (
+          <label>
+            Time Limit (minutes)
+            <input
+              type="number"
+              min={1}
+              max={180}
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+            />
+          </label>
+        )}
       </div>
 
       {error && <p className="err">{error}</p>}
@@ -177,9 +191,9 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
 
       <button type="submit" className="btn p" disabled={loading}>
         {loading
-          ? 'Generating via Open-Source AI & Saving to MongoDB…'
+          ? 'Generating Calculus Problems via Gemini AI…'
           : mode === 'test'
-            ? 'Generate & Launch Mock Exam →'
+            ? 'Generate & Launch Timed Mock →'
             : 'Generate & Save to MongoDB'}
       </button>
     </form>

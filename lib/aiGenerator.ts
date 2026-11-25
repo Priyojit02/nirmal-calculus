@@ -174,7 +174,7 @@ export async function generateCalculusProblems(
     );
   }
 
-  const count = Math.max(1, Math.min(5, params.count));
+  const count = Math.max(1, Math.min(10, params.count));
 
   const formatInstruction =
     params.type === 'mixed'
