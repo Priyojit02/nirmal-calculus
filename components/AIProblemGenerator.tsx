@@ -56,12 +56,22 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
         body: JSON.stringify(payload),
       });
 
-      const data = (await res.json()) as {
+      const rawText = await res.text();
+      let data: {
         error?: string;
         count?: number;
         slug?: string;
         title?: string;
-      };
+      } = {};
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        data = {
+          error: res.ok
+            ? 'Invalid server response.'
+            : `Server returned ${res.status} (generation timed out — try 1–3 questions at a time).`,
+        };
+      }
 
       if (!res.ok) {
         setError(data.error || 'Generation failed.');

@@ -213,10 +213,9 @@ For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g
   const candidates = [model];
   if (baseUrl.includes('generativelanguage.googleapis.com')) {
     for (const fb of [
+      'gemini-3.1-flash-lite',
       'gemini-3.8-flash',
       'gemini-3.5-flash',
-      'gemini-3.1-flash-lite',
-      'gemini-4-hydrogen',
       'gemini-flash-latest',
     ]) {
       if (!candidates.includes(fb)) candidates.push(fb);
@@ -229,33 +228,45 @@ For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g
 
   for (const candidateModel of candidates) {
     usedModel = candidateModel;
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: candidateModel,
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-      }),
-    });
+    try {
+      const res = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        signal: AbortSignal.timeout(18000),
+        body: JSON.stringify({
+          model: candidateModel,
+          temperature: 0.4,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        }),
+      });
 
-    if (res.ok) {
-      response = res;
-      break;
-    }
+      if (res.ok) {
+        response = res;
+        break;
+      }
 
-    lastErr = await res.text().catch(() => '');
-    if (res.status !== 503 && res.status !== 429 && res.status !== 404) {
-      throw new Error(
-        `AI endpoint (${baseUrl}, model: ${candidateModel}) returned ${res.status}: ${lastErr.slice(0, 240)}`
-      );
+      lastErr = await res.text().catch(() => '');
+      if (res.status !== 503 && res.status !== 429 && res.status !== 404) {
+        throw new Error(
+          `AI endpoint (${baseUrl}, model: ${candidateModel}) returned ${res.status}: ${lastErr.slice(0, 240)}`
+        );
+      }
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        (err.name === 'TimeoutError' || err.name === 'AbortError')
+      ) {
+        lastErr = `${candidateModel} timed out after 18s`;
+        continue;
+      }
+      throw err;
     }
   }
 
