@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { CalculusTopic, DifficultyLevel, QuestionType } from '@/types';
 
 const TOPICS: CalculusTopic[] = [
@@ -38,6 +39,9 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
+  const [generatedList, setGeneratedList] = useState<
+    Array<{ slug: string; title: string; difficulty: string; type: string }>
+  >([]);
 
   const safeJson = async (res: Response) => {
     const raw = await res.text();
@@ -57,6 +61,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
     setError('');
     setStatus('');
     setProgress('');
+    setGeneratedList([]);
     setLoading(true);
 
     try {
@@ -78,7 +83,16 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
           setError(String(data.error || 'Generation failed.'));
           return;
         }
-        setStatus(`Generated ${String(data.count ?? count)} new problem(s).`);
+        const created = Array.isArray(data.problems)
+          ? (data.problems as Array<{
+              slug: string;
+              title: string;
+              difficulty: string;
+              type: string;
+            }>)
+          : [];
+        setGeneratedList(created);
+        setStatus(`Generated ${String(data.count ?? created.length)} new problem(s):`);
         router.refresh();
         return;
       }
@@ -296,7 +310,26 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
 
       {progress && <p className="mu">{progress}</p>}
       {error && <p className="err">{error}</p>}
-      {status && <p className="ok">{status}</p>}
+      {status && (
+        <div className="callout ok-box" style={{ marginBottom: 12 }}>
+          <strong>{status}</strong>
+          {generatedList.length > 0 && (
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+              {generatedList.map((p) => (
+                <li key={p.slug} style={{ marginBottom: 4 }}>
+                  <Link href={`/problems/${p.slug}`}>
+                    <strong>{p.title}</strong>
+                  </Link>{' '}
+                  <span className="mu">
+                    ({p.difficulty} · {p.type === 'numerical' ? 'Numerical' : 'MCQ'})
+                  </span>{' '}
+                  — <Link href={`/problems/${p.slug}`}>Solve now →</Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <button type="submit" className="btn p" disabled={loading}>
         {loading
