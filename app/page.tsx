@@ -54,7 +54,7 @@ export default async function HomePage() {
             MongoDB: {dbConnected ? 'Connected' : 'Disconnected'}
           </span>
           <span className={aiHealth.reachable ? 'tag green' : 'tag subtle'}>
-            AI ({aiHealth.model}): {aiHealth.reachable ? 'Online' : 'Standby'}
+            AI Engine: {aiHealth.reachable ? 'Online' : 'Standby'}
           </span>
         </div>
         <h1>AI-Powered Calculus Practice, Backed by MongoDB.</h1>

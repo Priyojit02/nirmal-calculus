@@ -49,7 +49,7 @@ function getAIConfig(modelOverride?: string) {
   const model =
     modelOverride?.trim() ||
     process.env.AI_MODEL ||
-    'gemini-3.1-flash-lite';
+    'gemini-4-hydrogen';
   const apiKey = geminiKey || process.env.AI_API_KEY || '';
   return { baseUrl, model, apiKey };
 }
@@ -121,7 +121,7 @@ function validateProblem(
       source:
         typeof raw.source === 'string' && raw.source.trim()
           ? raw.source.trim()
-          : `${model} · ${difficulty}`,
+          : `${difficulty} · AI Studio`,
       type: 'mcq',
       statement,
       options,
@@ -146,7 +146,7 @@ function validateProblem(
     source:
       typeof raw.source === 'string' && raw.source.trim()
         ? raw.source.trim()
-        : `${model} · ${difficulty}`,
+        : `${difficulty} · AI Studio`,
     type: 'numerical',
     statement,
     options: [],

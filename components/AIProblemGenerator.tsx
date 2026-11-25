@@ -96,8 +96,9 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
               : 'Generate Fresh Practice Problems into MongoDB'}
           </h3>
           <p className="mu" style={{ margin: 0 }}>
-            Powered by Google Gemini (<code>gemini-3.1-flash-lite</code>) — set topic,
-            standard, question count{mode === 'test' ? ', and time limit' : ''}.
+            Set topic, standard, question count
+            {mode === 'test' ? ', and time limit' : ''} to create fresh
+            problems.
           </p>
         </div>
       </div>
@@ -191,7 +192,7 @@ export default function AIProblemGenerator({ mode }: AIProblemGeneratorProps) {
 
       <button type="submit" className="btn p" disabled={loading}>
         {loading
-          ? 'Generating Calculus Problems via Gemini AI…'
+          ? 'Crafting rigorous calculus problems…'
           : mode === 'test'
             ? 'Generate & Launch Timed Mock →'
             : 'Generate & Save to MongoDB'}
