@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { connectDB } from '@/lib/mongodb';
-import { getUser } from '@/lib/auth';
+import { getActiveUser } from '@/lib/session';
 import { User } from '@/models/User';
 import { Problem } from '@/models/Problem';
 import { TestSeries } from '@/models/TestSeries';
@@ -10,9 +10,9 @@ import AdminPanel from '@/components/AdminPanel';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const user = await getUser();
+  const user = await getActiveUser();
   if (!user) {
-    redirect('/login?next=/admin');
+    redirect('/login?next=/admin&error=Session+expired+or+signed+in+on+another+device+(max+2+devices)');
   }
   if (user.role !== 'super_admin') {
     redirect('/dashboard');

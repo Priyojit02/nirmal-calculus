@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Problem } from '@/models/Problem';
 import { generateCalculusProblems } from '@/lib/aiGenerator';
+import { checkRateLimit } from '@/lib/rateLimit';
 import type { CalculusTopic, DifficultyLevel, QuestionType } from '@/types';
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const limited = await checkRateLimit(req, {
+    bucket: 'ai-generate',
+    limit: 8,
+    windowSeconds: 300,
+  });
+  if (limited) return limited;
+
   try {
     const body = (await req.json()) as {
       topic?: CalculusTopic;

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { connectDB } from '@/lib/mongodb';
-import { getUser } from '@/lib/auth';
+import { getActiveUser } from '@/lib/session';
 import { User } from '@/models/User';
 import { Problem } from '@/models/Problem';
 import { Attempt } from '@/models/Attempt';
@@ -9,9 +9,9 @@ import { Attempt } from '@/models/Attempt';
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const authUser = await getUser();
+  const authUser = await getActiveUser();
   if (!authUser) {
-    redirect('/login');
+    redirect('/login?error=Session+expired+or+signed+in+on+another+device+(max+2+devices)');
   }
 
   await connectDB();

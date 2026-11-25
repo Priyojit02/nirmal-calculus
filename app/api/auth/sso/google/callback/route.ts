@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import { User } from '@/models/User';
 import { COOKIE_NAME, signToken } from '@/lib/auth';
 import { getSuperAdminEmail } from '@/lib/superAdmin';
+import { createDeviceSession } from '@/lib/session';
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
@@ -77,12 +78,21 @@ export async function GET(req: NextRequest) {
       await user.save();
     }
 
-    const jwt = await signToken({
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
+    const jti = await createDeviceSession(
+      user._id.toString(),
+      req.headers.get('user-agent') || 'Google SSO'
+    );
+
+    const jwt = await signToken(
+      {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        jti,
+      },
+      jti
+    );
 
     const res = NextResponse.redirect(
       new URL(user.role === 'super_admin' ? '/admin' : '/dashboard', req.url)

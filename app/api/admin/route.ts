@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { getUser } from '@/lib/auth';
+import { getActiveUser } from '@/lib/session';
 import { User } from '@/models/User';
 import { Problem } from '@/models/Problem';
 import { TestSeries } from '@/models/TestSeries';
@@ -9,7 +9,7 @@ import { Attempt } from '@/models/Attempt';
 export const dynamic = 'force-dynamic';
 
 async function requireSuperAdmin(req: NextRequest) {
-  const user = await getUser(req);
+  const user = await getActiveUser(req);
   if (!user || user.role !== 'super_admin') {
     return null;
   }

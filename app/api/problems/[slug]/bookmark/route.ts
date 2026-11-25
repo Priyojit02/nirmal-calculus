@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { User } from '@/models/User';
-import { getUser } from '@/lib/auth';
+import { getActiveUser } from '@/lib/session';
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { slug: string } }
 ) {
-  const authUser = await getUser();
+  const authUser = await getActiveUser(req);
   if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

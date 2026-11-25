@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Problem } from '@/models/Problem';
 import { User } from '@/models/User';
-import { getUser } from '@/lib/auth';
+import { getActiveUser } from '@/lib/session';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { slug: string } }
 ) {
+  const limited = await checkRateLimit(req, {
+    bucket: 'problem-check',
+    limit: 40,
+    windowSeconds: 60,
+  });
+  if (limited) return limited;
+
   try {
     await connectDB();
     const problem = await Problem.findOne({ slug: params.slug }).lean();
@@ -30,7 +38,7 @@ export async function POST(
       isCorrect = Math.abs(answer - problem.correctValue) <= tol;
     }
 
-    const authUser = await getUser();
+    const authUser = await getActiveUser(req);
     if (authUser && isCorrect) {
       await User.updateOne(
         { _id: authUser.id },

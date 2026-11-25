@@ -4,17 +4,30 @@ import { connectDB } from '@/lib/mongodb';
 import { User } from '@/models/User';
 import { COOKIE_NAME, getUser, signToken } from '@/lib/auth';
 import { ensureSuperAdmin, getSuperAdminEmail } from '@/lib/superAdmin';
+import { checkRateLimit } from '@/lib/rateLimit';
+import {
+  createDeviceSession,
+  getActiveUser,
+  revokeDeviceSession,
+} from '@/lib/session';
 
 function badRequest(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
+  const user = await getActiveUser(req);
   return NextResponse.json({ user });
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await checkRateLimit(req, {
+    bucket: 'auth',
+    limit: 15,
+    windowSeconds: 60,
+  });
+  if (limited) return limited;
+
   try {
     const body = (await req.json()) as {
       action?: string;
@@ -24,6 +37,10 @@ export async function POST(req: NextRequest) {
     };
 
     if (body.action === 'logout') {
+      const current = await getUser(req);
+      if (current) {
+        await revokeDeviceSession(current.id, current.jti);
+      }
       const res = NextResponse.json({ ok: true });
       res.cookies.delete(COOKIE_NAME);
       return res;
@@ -72,19 +89,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const userAgent = req.headers.get('user-agent') || 'Browser';
+    const jti = await createDeviceSession(user._id.toString(), userAgent);
+
     const authPayload = {
       id: user._id.toString(),
       name: user.name,
       email: user.email,
       role: user.role,
+      jti,
     };
 
-    const token = await signToken(authPayload);
+    const token = await signToken(authPayload, jti);
 
     const res = NextResponse.json({
       ok: true,
       token,
-      user: authPayload,
+      user: {
+        id: authPayload.id,
+        name: authPayload.name,
+        email: authPayload.email,
+        role: authPayload.role,
+      },
     });
 
     res.cookies.set(COOKIE_NAME, token, {

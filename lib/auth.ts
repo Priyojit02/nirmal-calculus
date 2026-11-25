@@ -5,6 +5,7 @@ import type { AuthUser, UserRole } from '@/types';
 export const COOKIE_NAME = 'nirmal_session';
 export const JWT_ISSUER = 'nirmal-calculus';
 export const JWT_AUDIENCE = 'nirmal-users';
+export const MAX_ACTIVE_DEVICES = 2;
 
 function getSecretKey(): Uint8Array {
   const secret = process.env.JWT_SECRET;
@@ -16,8 +17,11 @@ function getSecretKey(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-export async function signToken(user: AuthUser): Promise<string> {
-  const jti = crypto.randomUUID();
+export async function signToken(
+  user: AuthUser,
+  customJti?: string
+): Promise<string> {
+  const jti = customJti || user.jti || crypto.randomUUID();
   return new SignJWT({
     id: user.id,
     name: user.name,
@@ -43,6 +47,7 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
     const id = typeof payload.sub === 'string' ? payload.sub : payload.id;
     const role: UserRole =
       payload.role === 'super_admin' ? 'super_admin' : 'user';
+    const jti = typeof payload.jti === 'string' ? payload.jti : undefined;
     if (
       typeof id === 'string' &&
       typeof payload.name === 'string' &&
@@ -53,6 +58,7 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
         name: payload.name,
         email: payload.email,
         role,
+        jti,
       };
     }
     return null;

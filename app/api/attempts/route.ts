@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
-import { getUser } from '@/lib/auth';
+import { getActiveUser } from '@/lib/session';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { Attempt, type IAttemptReview } from '@/models/Attempt';
 import { Problem } from '@/models/Problem';
 import { TestSeries } from '@/models/TestSeries';
@@ -8,10 +9,10 @@ import { User } from '@/models/User';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  const authUser = await getUser();
+export async function GET(req: NextRequest) {
+  const authUser = await getActiveUser(req);
   if (!authUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized or session expired (2-device limit)' }, { status: 401 });
   }
 
   await connectDB();
@@ -24,9 +25,16 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const authUser = await getUser();
+  const limited = await checkRateLimit(req, {
+    bucket: 'attempts',
+    limit: 40,
+    windowSeconds: 60,
+  });
+  if (limited) return limited;
+
+  const authUser = await getActiveUser(req);
   if (!authUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized or session expired (2-device limit)' }, { status: 401 });
   }
 
   try {

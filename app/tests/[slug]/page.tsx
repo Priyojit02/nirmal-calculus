@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { connectDB } from '@/lib/mongodb';
-import { getUser } from '@/lib/auth';
+import { getActiveUser } from '@/lib/session';
 import { TestSeries } from '@/models/TestSeries';
 import { Problem } from '@/models/Problem';
 import TestRunner from '@/components/TestRunner';
@@ -13,9 +13,9 @@ export default async function TestRunnerPage({
 }: {
   params: { slug: string };
 }) {
-  const user = await getUser();
+  const user = await getActiveUser();
   if (!user) {
-    redirect('/login');
+    redirect('/login?error=Session+expired+or+signed+in+on+another+device+(max+2+devices)');
   }
 
   await connectDB();
