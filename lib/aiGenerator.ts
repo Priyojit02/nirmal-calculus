@@ -210,8 +210,9 @@ Ensure all LaTeX backslashes are properly escaped in JSON strings (e.g. \\\\frac
 ${formatInstruction}
 For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g. King's property, Feynman differentiation under the integral sign, Taylor cancellation, Bernoulli ODEs, Jacobians, Stokes/Green's theorem, or telescoping series).`;
 
+  const isGemini = baseUrl.includes('generativelanguage.googleapis.com');
   const candidates = [model];
-  if (baseUrl.includes('generativelanguage.googleapis.com')) {
+  if (isGemini) {
     for (const fb of [
       'gemini-3.1-flash-lite',
       'gemini-3.8-flash',
@@ -229,22 +230,27 @@ For JEE Advanced / MIT / Putnam problems, emphasize multi-concept synthesis (e.g
   for (const candidateModel of candidates) {
     usedModel = candidateModel;
     try {
+      const payload: Record<string, unknown> = {
+        model: candidateModel,
+        temperature: 0.4,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      };
+      if (isGemini) {
+        payload.reasoning_effort = 'low';
+      }
+
       const res = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
-        signal: AbortSignal.timeout(18000),
-        body: JSON.stringify({
-          model: candidateModel,
-          temperature: 0.4,
-          response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-        }),
+        signal: AbortSignal.timeout(14000),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
