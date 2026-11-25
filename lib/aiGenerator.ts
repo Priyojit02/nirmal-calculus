@@ -89,6 +89,9 @@ function validateProblem(
   const solution = typeof raw.solution === 'string' ? raw.solution.trim() : '';
 
   if (!title || !statement || !solution) return null;
+  if (/\b(let's adjust|wait,\s+let's|adjust the problem)\b/i.test(solution)) {
+    return null;
+  }
 
   const topic = VALID_TOPICS.includes(raw.topic as CalculusTopic)
     ? (raw.topic as CalculusTopic)
@@ -183,7 +186,7 @@ export async function generateCalculusProblems(
         ? 'All problems must have "type": "mcq" with exactly 4 options and "correctOption" (0-3).'
         : 'All problems must have "type": "numerical" with "options": [] and "correctValue" (a number).';
 
-  const systemPrompt = `You are a Mathematics Professor designing original, mathematically verified calculus problems at ${params.difficulty} standard (JEE Advanced / MIT 18.01 / MIT 18.02 / Putnam).
+  const systemPrompt = `You are a Mathematics Professor designing original, 100% mathematically verified calculus problems at ${params.difficulty} standard (JEE Advanced / MIT 18.01 / MIT 18.02 / Putnam).
 Respond ONLY with valid JSON matching this exact schema:
 {
   "problems": [
@@ -191,20 +194,24 @@ Respond ONLY with valid JSON matching this exact schema:
       "title": "Concise descriptive title",
       "topic": "${params.topic}",
       "difficulty": "${params.difficulty}",
-      "source": "${model} · ${params.difficulty}",
+      "source": "${params.difficulty} · AI Studio",
       "type": "mcq" | "numerical",
-      "statement": "LaTeX problem statement using $...$ and $$...$$",
+      "statement": "Final verified LaTeX problem statement using $...$ and $$...$$",
       "options": ["$opt0$", "$opt1$", "$opt2$", "$opt3$"],
-      "correctOption": 0,
-      "correctValue": 0,
+      "correctOption": <integer 0 to 3 if mcq, omit if numerical>,
+      "correctValue": <exact numeric answer matching the solution if numerical, omit if mcq>,
       "tolerance": 0.01,
       "hint": "Concise LaTeX hint",
-      "solution": "Complete, rigorous step-by-step LaTeX derivation",
+      "solution": "Clean, final step-by-step LaTeX derivation with NO scratchpad thoughts",
       "tags": ["Tag1", "Tag2"]
     }
   ]
 }
-Ensure all LaTeX backslashes are properly escaped in JSON strings (e.g. \\\\frac, \\\\int, \\\\lim). Verify every calculation carefully before outputting.`;
+CRITICAL RULES:
+1. Solve and verify the math completely in your internal reasoning BEFORE writing JSON.
+2. NEVER write scratchpad phrases like "Wait", "Actually", or "Let's adjust the problem" inside "solution" or "statement".
+3. "correctValue" (for numerical) or "options[correctOption]" (for mcq) MUST strictly match the final line of "solution" and the exact numbers in "statement".
+4. Properly escape all LaTeX backslashes in JSON strings (e.g. \\\\frac, \\\\int, \\\\lim).`;
 
   const userPrompt = `Generate ${count} original, non-trivial calculus problem(s) in "${params.topic}" at "${params.difficulty}" difficulty.
 ${formatInstruction}
